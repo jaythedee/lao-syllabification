@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<!-- unicode -->
+		<meta charset="UTF-8">
+
+		<link rel="stylesheet" href="lao.css">
+
+	</head>
+	<body>
+<h3>Dear User,</h3>
+
+this notepad can be used for Lao syllabification. The respective algorithm is based on an article by Phissamay and co-workers: <i>P. Phissamay et. al, Syllabification of Lao Script for Line Breaking, 2007</i>.  
+It is free to distribute. Any corrections or recommendations are welcome! The idea was, to have an algorithm at hand that can syllabilize Lao online and that translations to syllables and words can be automatically be obtained by a simple click. I hope, this makes Lao translation easier and less prone to errors as e.g. in Google Translate. <br>
+For a short test, simply pic an example from below and paste it into the form field (or simply click "copy"). For syllabification, click "Syllabilize" (obviously). Once the string appears on a red background, you might click on each red block to get the respective translation. This process might take up to several seconds to finish*. You also have the option to join two or more syllables together using drag and drop (press and hold the left mousebutton, move and release over another red block). Hence, once these two syllables are joined together, they may be clicked and the entire word will be looked up in the dictionary. 
+<br>
+<br>
+<span>Example 1: ຄົນລາວ</span><div style = "position:relative;display: inline;top:-5px;font-size:0.8em;color:blue;font-weight:bold;" id ="ex1" data-attribute="ຄົນລາວ" onclick="translate(this);return false;"><a href="" style="text-decoration:none;color:inherit">copy</a></div><br>
+<span>Example 2: ມັນບໍ່ແມ່ນຢ່າງທີເຈົ້າຄິດ</span><div style = "position:relative;display: inline;top:-5px;font-size:0.8em;color:blue;font-weight:bold;" id ="ex2" data-attribute="ມັນບໍ່ແມ່ນຢ່າງທີເຈົ້າຄິດ" onclick="translate(this);return false;"><a href="" style="text-decoration:none;color:inherit">copy</a></div><br> <!-- It's not what you think -->
+<span>Example 3: ເອົາເຫມິດເດີ</span><div style = "position:relative;display: inline;top:-5px;font-size:0.8em;color:blue;font-weight:bold;" id ="ex3" data-attribute="ເອົາເຫມິດເດີ" onclick="translate(this);return false;"><a href="" style="text-decoration:none;color:inherit">copy</a></div><br> <!-- bottoms up -->
+<!-- ຈ້າທ້ຈ້າວ່າ dumb as rock -->
+<!-- ມື້ນີ້ອາກາດໂຄດຮ້ອນເລີຍ  It's damn hot today -->
+<br>
+<br>
+<form id="frm1"  style = "display:inline;">
+ <textarea id = "text1" name="message" rows="1" cols="30">
+</textarea></form>
+<button onclick="test()" style = "position:relative;display:inline;top:-10px">Syllabilize</button>
+
+
+
+
+<br><br><br><span style="font-size:0.6em">The script usually fetches the translation from an online database. I have not yet verified, whether this sort of "data-grabbing" is actually allowed. Therefore, for the examples above, I have pre-loaded the translations to simulate the actual behaviour. 
+	<!-- include dependencies -->
+
+	<script src="jquery-2.1.3.min.js"></script>
+	<script src="drag-n-drop.js"></script>
+	<script src="lao.js"></script>
+
+		
+	</body>
+</html>
