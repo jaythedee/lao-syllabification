@@ -14,7 +14,9 @@ function test(){
 
 function findRule(queryStr,rules) {
 // once a traversal path has been found, find the correct rule to apply	
-	
+// returns: 0 if no vowel was found
+// returns: -1 if vowel but no subrule was found that matches
+
 	// find first vowel where one could use a rule on
 	var findRuleIndex = [/x00/g,/x01/g,/x02/g,/x03/g,/x04/g,/x4./g,/x5[0-3]/g,/x54/g,/x55/g,/x56/g,/x7./g,/x80/g,/x81/g,/x82/g];
 	// match any of the patterns
@@ -23,44 +25,48 @@ function findRule(queryStr,rules) {
 		ruleI++;
 		if (ruleI > findRuleIndex.length-1){
 			// there seems to be no vowel, skip character then
-			console.log("no vowel!");
 			return 0;
 		}
 	}
 		
 	// find rule based on query String around vowel
 	var subruleI = -1; var pattern = "";		
-	// use either rule directly or search for longest subrule 		
+	// use either rule directly or search for latest subrule 		
 	if (rules[ruleI].length>0){
-		console.log("Finding subrule...");
 		for (var jj = 0; jj < rules[ruleI].length; jj++){
 			if (queryStr.match(rules[ruleI][jj]) != null){
 				subruleI = jj;
 			}
 		}
-		// Found the following rule
-		console.log("Found the correct rule: " + ruleI + "  " + subruleI);
+		
 		if (subruleI > -1) {
+			// subrule found
 			pattern = rules[ruleI][subruleI];
-		} else {	return -1;}
+		} else {	
+			// no subrule found
+			return -1;
+		}
+		console.log("Rule: " + ruleI + "  Subrule: " + subruleI);
 	}
 	else
 	{
-		console.log("No subrule");
+		// no subrule exists
 		pattern = rules[ruleI];
+		console.log("Rule: " + ruleI);
 	}
 	return pattern;
 }
 
 function query(traverseStr,XChar,bInd) {
 // generate query string based on traverse string
+
 	var queryStr = ""; 
 	for (var ii = 0; ii < traverseStr.length; ii++){
+		// class and position index
 		var classI = XChar[bInd + ii][traverseStr[ii]][0];
 		var posI = XChar[bInd + ii][traverseStr[ii]][1];
 				
-		var temp = "x" + classI.toString() + posI.toString();
-		queryStr = queryStr.concat(temp);
+		queryStr = queryStr + "x" + classI.toString() + posI.toString();
 	}
 	return queryStr;
 }
@@ -73,7 +79,7 @@ function traverse(text,XChar,i) {
 
 	// number must be increasing
 	var cont = 1;
-	while (cont == 1 && i < text.length){
+	while (cont == 1 && i < text.length && i < XChar.length-1){
 		var j = 0;
 		var jlast = traverseStr.length - 1;
 		var jlast = traverseStr[jlast];
@@ -87,21 +93,15 @@ function traverse(text,XChar,i) {
 			}
 		}
 		if (j == XChar[i+1].length){
-			// console.log("none found that is larger, stop browsing through alternative positions");
 			// none found
 			cont = 0;
-			// cleanup
 		}
 		else
 		{
-			// found a next character which has a consequent position
+			// found next character
 			traverseStr.push(j);
 		}
 		i = i + 1;
-		if (i == XChar.length-1){
-			console.log("reached end of string");
-			cont = 0;
-		}
 	}
 	
 	return traverseStr;
@@ -148,8 +148,6 @@ function charMapping(str) {
 // X represents character codes per character position in syllable
 // XChar collects position in X array (i,j)
 
-	var testoutput = document.getElementById("testoutput");
-
 	// place characters into categories
 	var X = new Array(12);
 	X[0] = [3776,3777,3778,3779,3780];
@@ -194,21 +192,18 @@ function tocharacters(text, XChar, CharCodes) {
 	var temp = text.toLowerCase().split("x");
 	temp.shift();
 
-	var CC = "";
+	var clearText = "";
 	for (var jj = 0; jj < temp.length; jj++){
 		// remove first number but if three numbers, remove first 2 numbers to obtain character codes
-		var temp1 = temp[jj];
-		var temp2 = temp[jj];
-		if (temp1.length > 2 && temp1[0] != 2)
-			{temp1 = temp1.substring(2);temp2 = temp2.substring(0,2);}
-		else {temp1 = temp1.substring(1);temp2 = temp2.substring(0,1);};
+		var nr = temp[jj];
+		if (nr.length > 2 && nr[0] != 2)
+			{posI = nr.substring(2);classI = nr.substring(0,2);}
+		else {posI = nr.substring(1);classI = nr.substring(0,1);};
 		
-		var temp3 = String.fromCharCode(CharCodes[temp2][temp1]);
-		
-		var CC = CC.concat(temp3);
+		clearText = clearText + String.fromCharCode(CharCodes[classI][posI]);
 	}
 	// save syllable in clear text characters
-	return CC;
+	return clearText;
 }
 
 function translate(e) {
@@ -217,6 +212,15 @@ function translate(e) {
 	var textfield = document.getElementById("text1");
 	textfield.innerHTML = queryStr;
 	return false;
+}
+
+function toClearText(pattern, XChar, CharCodes) {
+	// transforms eg. x01x22x34 into lao characters for console output
+	
+	// transform to characters
+	clearText = tocharacters(pattern.toString(), XChar, CharCodes);
+	
+	return clearText;
 }
 
 function syllabilize() {
@@ -230,12 +234,17 @@ function syllabilize() {
  	var text = "";
    text += x.elements[0].value;
 
+	// for counting the numbers of 'x'
+	var regEx = /x/g;
+
 	// save syllables into array
 	var syllables = [];
+	
+	// set first boundary to zero
 	var boundaries = [0];
 
+	// remove any non-lao characters
 	var texttmp = "";
-	// remove unwanted characters
 	for (var jj = 0; jj < text.length; jj++){
 			if (text.charCodeAt(jj) < 3713 || text.charCodeAt(jj) > 3805){	
 			}
@@ -249,81 +258,83 @@ function syllabilize() {
 	var temp = charMapping(text);
 	var XChar = temp[1];
 	var CharCodes = temp[0];
-	
-	// display result
-	console.log("Character Mapping: ");	
-	console.log(XChar); // access pattern: XChar[character][alternative]{[class][position]}
 
 	// generate rules/reg. expressions
 	var rules = generateRules();
 
-	// set first boundary as beginning of string
-	var bInd = 0;
-	var skip = 0;
-	var imax = 1;
-	while (bInd < text.length-1 && imax < 1000){ // -1 because if there is one character remaining, it cannot be a syllable
-		imax++;
+	var bInd = 0; 	// set first boundary as beginning of string
+	var skip = 0;	// skip "wrong" characters
+	var count = 1;	// initialize iteration count
+	while (bInd < text.length-1 && count < 1000){ // -1 because if there is one character remaining, it cannot be a syllable
+		count++;
 		  
 		console.log("#######################################################");
 
 		console.log("Current syllable stack: " + syllables);
  		console.log("Current Boundary: " + bInd);
+ 		if (bInd < text.length - 5){
+			 		console.log("Position in string: " + text.substring(bInd-4,bInd) + "`´" + text.substring(bInd,bInd + 4));
+		} else {	console.log("Position in string: " + text.substring(bInd-4,bInd) + "`´" + text.substring(bInd,text.length-1));}
 		
 		// store boundary position				
 		lastBoundary = bInd;
 				
 		// generate string to verify
 		var traverseStr = traverse(text,XChar,bInd);
-		console.log("Traversal Path: " + traverseStr);
 
 		// generate query string based on traverseStr
 		var queryStr = query(traverseStr,XChar,bInd);
-		console.log("Query Str: " + queryStr);
  
 		// find suitable rule
-		var pattern = findRule(queryStr,rules);		
-		console.log("Pattern: " + pattern);
-				
+		var pattern = findRule(queryStr,rules);				
 		if (pattern != 0){		
 			// if matched correctly you now have to match regEx
-			var finalMatch;
 			var temp = queryStr.match(pattern);
 		}
 		else {
+			// could not find a suitable rule => Character has to be a mistake, continue with next character
 			skip = 1;
+			bInd += 1;
 		}
 		
-		if (skip != 1) { 
-		if(temp!=null){ 
-			finalMatch = temp.toString();
-			console.log("Matched: " + finalMatch);
+		if (skip != 1) { 		// found a rule, now ensure check was positive 
+		if (temp != null){ 	// matched to pattern
+		
 			// transform match to characters
-			syllableClear = tocharacters(finalMatch, XChar, CharCodes);
+			syllableClear = toClearText(temp, XChar, CharCodes);
+			
+			console.log("Matching " + queryStr + " to " + pattern);
+			console.log("Matched: " + syllableClear);
+
 			// save syllable
 			syllables.push(syllableClear);
+			
+			// save new boundary
+			var smallX = (temp.toString().match(regEx) || []).length;
+			bInd = smallX + bInd;
+			console.log("New boundary index: " + bInd);
+			boundaries.push(bInd);	
 		}
-		else {
+		else { // queryStr did not match pattern, include last character from previous syllable
 			console.log("Could not match string, include last character from previous syllable");
-			var prevValid = 1; var currInvalid = 1;
+			var prevValid = 1; var currInvalid = 1; // stopping rule
 			while (prevValid && currInvalid){
 				
-				// new boundary
+				// go one character back
 				bInd = bInd - 1;
 				
-				// save last syllable (clear text)
+				// save and remove last syllable (clear text)
 				var lastSyllable = syllables[syllables.length-1];
+				syllables.pop();				
 				
-				// remove last syllable from stack
-				syllables.pop();
-				
-				if (lastSyllable.length > 2){
-					// syllable needs to consist of at least 2 symbols
+				if (lastSyllable.length >= 3){
+					// syllable needs to consist of at least 3 symbols, because we cut one off
 					
 					//// verify previous variable
 
 					// remove last character from syllable and create mapping
-					var texttmp = lastSyllable.substring(0,lastSyllable.length-1);
-					var temp = charMapping(texttmp);
+					var texttmp = 	lastSyllable.substring(0,lastSyllable.length-1);
+					var temp = 		charMapping(texttmp);
 					var XChartmp = temp[1];
 					
 					console.log("***Verify previous syllable: " + texttmp);
@@ -334,25 +345,25 @@ function syllabilize() {
 					// generate query string based on traverseStr
 					var queryStrPrev = query(traverseStr,XChartmp,0);
 
-					// take longest match to pattern
+					// match to pattern
 					var pattern = findRule(queryStrPrev,rules);
-	
-					console.log("String: " + queryStrPrev + "   Matching with: " + pattern);
-					console.log("Result: " + queryStrPrev.match(pattern));
-					
 					if (queryStrPrev.match(pattern)!=null) {
+						
+						var tmp = queryStrPrev.match(pattern).toString();
+						
 						// clear text
-						var temp1 = tocharacters(queryStrPrev.match(pattern).toString(), XChar, CharCodes);
-
+						var temp1 = tocharacters(tmp, XChar, CharCodes);	
+						
 						// be careful, now the syllable has to be accurately matched in length
-						var regEx1 = /x/g;var tmp = queryStrPrev.match(pattern).toString();	
-						length1 = (queryStrPrev.match(regEx1) || []).length;
-						length2 = (tmp.match(regEx1) || []).length;
+						length1 = (queryStrPrev.match(regEx) || []).length;
+						length2 = (tmp.match(regEx) || []).length;
+
+						console.log("String: " + queryStrPrev + "   Matching with: " + pattern);
+						console.log("Result: " + queryStrPrev.match(pattern));
 					}			
 					
-					// update flag
-					if (queryStrPrev.match(pattern) != null && (length1==length2)){prevValid = 1;}
-					else{prevValid = 0;}			
+					// starting from the loop condition that previous syllable is valid, toggle that
+					if (queryStrPrev.match(pattern) == null || (length1!=length2) || pattern == -1 ){prevValid = 0;}
 				
 					//// verify current syllable
 
@@ -377,9 +388,9 @@ function syllabilize() {
 					
 					// update flag
 					if (queryStr.match(pattern) != null && pattern!=-1){currInvalid = 0;} 
-					else {currInvalid = 1;}
 				}
 				else {
+					// syllable contains of only two characters
 					// update flag
 					currInvalid = 1;
 					prevValid = 0;
@@ -391,40 +402,34 @@ function syllabilize() {
 				// save syllables
 				syllables.push(temp1);
 				syllables.push(temp2);
-				// save boundary accordingly
+				// replace last boundary
 				boundaries.pop();
 				boundaries.push(bInd);
+				// found new boundary
+				var temp = queryStr.match(pattern);
+				var smallX = (temp.toString().match(regEx) || []).length;
+				bInd = smallX + bInd;
+				console.log("New boundary index: " + bInd);
+				boundaries.push(bInd);	
 			}
 			else {
 				// now, since prev is not valid anymore, restore last working syllable and skip character
 				// restore syllable
 				syllables.push(lastSyllable);
+				// restore boundary and increase by one to skip character that we originally started with
+				bInd = lastBoundary + 1;
 				skip = 1;
 			}			
 		} // end of else condition
 		} // end of skip
-		if (skip != 1) {
-		// Boundary at the end of patterned string
-		// find number of 'X' in string		
-		var regEx1 = /x/g;
-		var smallX = (finalMatch.match(regEx1) || []).length;
-		bInd = smallX + bInd;
-		console.log("New boundary index: " + bInd);
-		boundaries.push(bInd);	
-		}
-		else {
-				// restore and increment boundary
-				// reiterate
-				bInd = lastBoundary + 1;
-				skip = 0;
-		}
+		skip = 0;
 	}
 	
 	// now that you are done with string you only need to transform your syllables back into characters and append
 	console.log("Boundaries: " + boundaries);
 	console.log("Stringified matched pattern: " + syllables);
 	
-	if (imax != 1000){
+	if (count != 1000){
 	for (var i = 0, n = syllables.length; i < n; i++) {	
 
 		var x = document.createElement("P");
