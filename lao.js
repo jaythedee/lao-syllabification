@@ -1,7 +1,7 @@
 function test(){
 // show result in popup div
 
-    $('body').append('<div id="shadow"><div id = "closewin">Close</div><p id="testoutput"></p><div id="header"></div></div>');
+    $('body').append('<div id="shadow"><div id = "closewin">Close</div><p id="testoutput"></p><div id="header2"></div><div id="header"></div></div>');
     $('#closewin').on('click', function(e){
         if($(this).is('#closewin')){
             e.preventDefault();
@@ -12,13 +12,149 @@ function test(){
     syllabilize(); 
 };
 
-function romanize(text) {
+function romanize(text,CharCodes) {
 // romanize lao syllables
 	// this is actually quite simple because we just need to character map
 	// initial consonant: x2
 	// final consonant: x9,x10
 	// vowel, everything else except x1 and x3
-	// TODO!
+		
+	var initCons = ['g','k','k','ng','tsch','s','s','nj','d','dt','t','t','n','b','p','p','f','p','f','m','j','r','l','w','h','','h','n','m'];
+	var finCons9 = ['g','ng','nj','d','n','m','b','w'];
+	var finCons10 = ['tsch','s','s','p','f','l'];
+
+	var rules = new Array(26);
+	rules[0] = /^x00$/g;
+	rules[1] = /^x00x50$/g;
+	rules[2] = /^x00x51$/g;
+	rules[3] = /^x00x52x71$/g;
+	rules[4] = /^x00x53x71$/g;
+	rules[5] = /^x00x80$/g;
+	rules[6] = /^x00x81x80$/g;
+	rules[7] = /^x00x55x81$/g;
+	rules[8] = /^x00x56$/g;
+	rules[9] = /^x01x72$/g;
+	rules[10] = /^x01x56x72$/g;
+	
+	rules[11] = /^x01$/g;
+	rules[12] = /^x01x80$/g;
+	rules[13] = /^x01x56$/g;
+	
+	rules[14] = /^x02$/g;
+	rules[15] = /^x02x80$/g;
+	rules[16] = /^x02x56$/g;
+	
+	rules[17] = /^x03$/g;
+	
+	rules[18] = /^x04$/g;
+	
+	rules[19] = /^x40$/g; // kurzes u
+	rules[20] = /^x41$/g; // langes u
+	
+	rules[21] = /^x50$/g;
+	rules[22] = /^x51$/g;
+	rules[23] = /^x52$/g;
+	rules[24] = /^x53$/g;									
+	rules[25] = /^x54$/g;
+	rules[26] = /^x55$/g; // kurzes o
+	rules[27] = /^x55x80$/g; // kurzes ua 	
+
+	rules[28] = /^x56$/g;
+	rules[29] = /^x56x70$/g;
+	
+	rules[30] = /^x70$/g;
+	rules[31] = /^x71$/g;									
+	rules[32] = /^x72$/g;	
+	
+	rules[33] = /^x80$/g;
+	rules[34] = /^x81$/g;									
+	rules[35] = /^x82$/g;	
+		
+	vowels = ['e','ö','öö','üa','üüa','e','am','au','e','iia','ia','ää','ä','ä','o','oo','o','ei','eii','u','uu','i','ii','ü','üü','or','o','ua','a','ua','or','or','ia','a','aa','am'];
+
+	var roman = [];
+	for (var ii = 0; ii < text.length; ii++) {
+			if (text[ii] == null) {
+				continue;
+				}
+		// seperate string into components
+		var temp = text[ii].toString();
+		var temp = temp.toLowerCase().split("x");
+		temp.shift();
+	
+		var ic = '';
+		var fc = '';		
+		var v = '';
+		var vowConn = '';		
+		
+		var clearText = "";
+		for (var jj = 0; jj < temp.length; jj++){
+			// remove first number but if three numbers, remove first 2 numbers to obtain character codes
+			var nr = temp[jj];
+			if (nr.length > 2 && nr[0] != 2)
+				{posI = nr.substring(2);classI = nr.substring(0,2);}
+			else {posI = nr.substring(1);classI = nr.substring(0,1);};
+		
+//			clearText = clearText + String.fromCharCode(CharCodes[classI][posI]);
+			console.log("classI: " + classI + "  posI: " + posI);
+			
+			switch(classI) {
+				case '2':
+					// found initial consonant	
+					// now check which one				
+					ic = initCons[posI];	
+					break;
+				case '9':
+					// found final consonant
+					fc = finCons9[posI];
+					break;
+				case '10':
+					// found final consonant
+					fc = finCons10[posI];
+					break;
+				case '0':
+					//collect
+					vowConn += 'x' + classI + posI;
+					break;
+				case '4':
+					//collect
+					vowConn += 'x' + classI + posI;
+					break;
+				case '5':
+					//collect
+					vowConn += 'x' + classI + posI;
+					break;
+				case '7':
+					//collect
+					vowConn += 'x' + classI + posI;
+					break;
+				case '8':
+					//collect
+					vowConn += 'x' + classI + posI;
+					break;
+			}
+			console.log(vowConn);
+		}
+		// use regular expressions for vowels
+		var breakInd = -1;
+		for (var kk = 0; kk < rules.length; kk++){
+			// check if vowel matches any rule
+			if (vowConn.match(rules[kk]) != null) {
+				breakInd = kk;
+			}		
+		}
+		
+		if (breakInd != -1){
+			var v = vowels[breakInd];
+		} else {
+			var v = 'XXX';		
+		}
+
+		// save syllable in clear text characters
+		console.log(ic + v + fc);
+		roman.push(' ' + ic + v + fc + ' '); 
+	}	
+	return roman;
 }
 
 function readOutLoud(text) {
@@ -266,6 +402,7 @@ function syllabilize() {
 
 	// save syllables into array
 	var syllables = [];
+	var syllablesXed = [];
 	
 	// set first boundary to zero
 	var boundaries = [0];
@@ -334,6 +471,7 @@ function syllabilize() {
 			console.log("Matched: " + syllableClear);
 
 			// save syllable
+			syllablesXed.push(temp);
 			syllables.push(syllableClear);
 			
 			// save new boundary
@@ -352,7 +490,10 @@ function syllabilize() {
 				
 				// save and remove last syllable (clear text)
 				var lastSyllable = syllables[syllables.length-1];
-				syllables.pop();				
+				var lastSyllableXed = syllablesXed[syllablesXed.length-1];
+								
+				syllables.pop();
+				syllablesXed.pop();				
 				
 				if (lastSyllable.length >= 3){
 					// syllable needs to consist of at least 3 symbols, because we cut one off
@@ -377,7 +518,7 @@ function syllabilize() {
 					if (queryStrPrev.match(pattern)!=null) {
 						
 						var tmp = queryStrPrev.match(pattern).toString();
-						
+						var temp1Xed = queryStrPrev.match(pattern);
 						// clear text
 						var temp1 = tocharacters(tmp, XChar, CharCodes);	
 						
@@ -410,7 +551,8 @@ function syllabilize() {
 
 					if (queryStr.match(pattern) != null) {
 						// clear text				
-						var temp2 = tocharacters(queryStr.match(pattern).toString(), XChar, CharCodes); 
+						var temp2 = tocharacters(queryStr.match(pattern).toString(), XChar, CharCodes);
+						var temp2Xed = queryStr.match(pattern); 
 					}
 					
 					// update flag
@@ -427,6 +569,8 @@ function syllabilize() {
 			if (prevValid) {
 				// now, since prev is still valid and current is now also valid
 				// save syllables
+				syllablesXed.push(temp1Xed);
+				syllablesXed.push(temp2Xed);
 				syllables.push(temp1);
 				syllables.push(temp2);
 				// replace last boundary
@@ -442,6 +586,7 @@ function syllabilize() {
 			else {
 				// now, since prev is not valid anymore, restore last working syllable and skip character
 				// restore syllable
+				syllablesXed.push(lastSyllableXed);
 				syllables.push(lastSyllable);
 				// restore boundary and increase by one to skip character that we originally started with
 				bInd = lastBoundary + 1;
@@ -455,9 +600,16 @@ function syllabilize() {
 	// now that you are done with string you only need to transform your syllables back into characters and append
 	console.log("Boundaries: " + boundaries);
 	console.log("Stringified matched pattern: " + syllables);
-	
+	romanized = romanize(syllablesXed,CharCodes);		
+	console.log("Romanized: " + romanized);
+		
 	if (count != 1000){
 	for (var i = 0, n = syllables.length; i < n; i++) {	
+
+		var t = document.createTextNode(romanized[i]);
+		var x = document.getElementById("header2");
+		x.appendChild(t);
+
 
 		var x = document.createElement("P");
 		var y = document.createElement("div");
