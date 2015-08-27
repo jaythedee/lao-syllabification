@@ -12,6 +12,33 @@ function test(){
     syllabilize(); 
 };
 
+function romanize(text) {
+// romanize lao syllables
+	// this is actually quite simple because we just need to character map
+	// initial consonant: x2
+	// final consonant: x9,x10
+	// vowel, everything else except x1 and x3
+	// TODO!
+}
+
+function readOutLoud(text) {
+// read lao text
+		
+	// TODO!	
+}
+
+function checkErrors(text) {
+// correct lao text, based on unmatched characters between syllables
+		
+	// TODO!	
+}
+
+function tonalize(text) {
+// check for tone markers and introduce symbols above text for pronounciation
+	
+	// TODO!
+}		
+
 function findRule(queryStr,rules) {
 // once a traversal path has been found, find the correct rule to apply	
 // returns: 0 if no vowel was found
